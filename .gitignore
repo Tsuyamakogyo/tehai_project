@@ -1,0 +1,5 @@
+# .env ファイルを無視
+config/.env
+
+# API キーを無視
+config/tehai-reader-key.json

@@ -4,12 +4,25 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 import os
+from dotenv import load_dotenv
+
+# .env ファイルを読み込む
+dotenv_path = os.path.join(os.path.dirname(__file__), '..', 'config', '.env')
+load_dotenv(dotenv_path)
 
 # --- 認証設定 ---
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-key_path = os.path.join("config", "tehai-reader-key.json")
+
+# 環境変数から API キーのパスを取得
+key_path = os.getenv("GOOGLE_API_CREDENTIALS_PATH")
+
+# API キーのパスを表示して確認
+print(key_path)  # テスト出力：確認のため
+
+# Google API 認証
 creds = ServiceAccountCredentials.from_json_keyfile_name(key_path, scope)
 client = gspread.authorize(creds)
+
 
 # --- スプレッドシートからデータ取得（先に記憶情報を準備） ---
 spreadsheet_id = "1wmG17XpaEJlO36uofjDm9bdw2DAwEbsV2EQ4uw_yzho"

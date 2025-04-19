@@ -71,15 +71,17 @@ tehai_project/
 │   ├── adapter.py              # 入出力データ変換・整備
 │   └── trend_analyzer.py       # 傾向スコア集計
 ├── tools/
-│   └── data_preparer.py        # スプレッドシート→データ抽出
+│   └── data_preparer.py        # ←このファイルに.env呼び出しコードがある
 ├── config/
-│   ├── tehai-reader-key.json   # 認証キー
+│   ├── .env                    # ← .env ファイル
+│   ├── tehai-reader-key.json   # ← API キーを保存
 │   └── rules.json              # スコアルール・特性設定
 ├── input/                      # 手配検討入力（CSV等）
 ├── output/                     # 出力結果・統計ログ
 ├── requirements.txt            # ライブラリ定義
 ├── venv/                       # 仮想環境ディレクトリ
-└── README.md                   # このファイル
+├── .gitignore                  # ← .gitignore ファイル
+└── README.md                   # プロジェクト概要
 ```
 
 ---
