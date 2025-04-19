@@ -1,0 +1,1 @@
+web: streamlit run tehai_streamlit_app.py
