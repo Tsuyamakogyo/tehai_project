@@ -4,25 +4,20 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 import os
-from dotenv import load_dotenv
+import json
+import streamlit as st
 
-# .env ファイルを読み込む
-dotenv_path = os.path.join(os.path.dirname(__file__), '..', 'config', '.env')
-load_dotenv(dotenv_path)
-
-# --- 認証設定 ---
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-
-# 環境変数から API キーのパスを取得
-key_path = os.getenv("GOOGLE_API_CREDENTIALS_PATH")
-
-# API キーのパスを表示して確認
-print(key_path)  # テスト出力：確認のため
-
-# Google API 認証
-creds = ServiceAccountCredentials.from_json_keyfile_name(key_path, scope)
-client = gspread.authorize(creds)
-
+# --- Streamlit Secretsから認証情報を取得 ---
+try:
+    key_json = st.secrets["GOOGLE_API_CREDENTIALS_JSON"]
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(json.loads(key_json), ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"])
+    client = gspread.authorize(creds)
+except KeyError:
+    st.error("Google API 認証情報がStreamlit Secretsに設定されていません。")
+    st.stop()  # エラーが発生したら処理を中断
+except Exception as e:
+    st.error(f"Google API 認証に失敗しました: {e}")
+    st.stop()  # エラーが発生したら処理を中断
 
 # --- スプレッドシートからデータ取得（先に記憶情報を準備） ---
 spreadsheet_id = "1wmG17XpaEJlO36uofjDm9bdw2DAwEbsV2EQ4uw_yzho"
@@ -37,10 +32,10 @@ person_sheet = sh.worksheet("人物データ")
 person_df = pd.DataFrame(person_sheet.get_all_records())
 
 # --- ローカルCSV読み込み（手配データ） ---
-with open("input/plan_date.csv", encoding="utf-8") as f:
+with open(".streamlit_storage/input/plan_date.csv", encoding="utf-8") as f:
     plan_date = f.read().strip()
 
-with open("input/project_data.csv", encoding="utf-8") as f:
+with open(".streamlit_storage/input/project_data.csv", encoding="utf-8") as f:
     project_data = list(csv.reader(f))
 
 def read_workers_flat(csv_path: str) -> list[str]:
@@ -57,8 +52,8 @@ def read_workers_flat(csv_path: str) -> list[str]:
     return names
 
 # --- 出勤者 CSV を読み込む ---
-am_workers = read_workers_flat("input/am_workers.csv")
-pm_workers = read_workers_flat("input/pm_workers.csv")
+am_workers = read_workers_flat(".streamlit_storage/input/am_workers.csv")
+pm_workers = read_workers_flat(".streamlit_storage/input/pm_workers.csv")
 
 # --- 顧客ジャンルの抽出（略称ベース） ---
 unique_customers = set([row[0].strip() for row in project_data])
@@ -100,7 +95,7 @@ attendance_pm = len(pm_workers)
 attendance_nt = 0
 
 # --- 出力形式を整えてファイル保存 ---
-test_input_path = "latest_input_plan.txt"
+test_input_path = os.path.join(os.path.dirname(__file__), '.streamlit_storage', 'input', 'latest_input_plan.txt')
 with open(test_input_path, "w", encoding="utf-8") as f:
     f.write("【手配検討日】\n")
     f.write(f"手配検討日：{plan_date}\n\n")

@@ -1,3 +1,6 @@
+# secrets.toml ファイルを無視
+.streamlit/secrets.toml
+
 # .env ファイルを無視
 config/.env
 

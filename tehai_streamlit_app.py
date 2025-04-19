@@ -16,7 +16,7 @@ from app.data_formatter import format_output
 sys.path.append(os.path.join(os.path.dirname(__file__), 'app'))
 
 # --- 保存先フォルダ ---
-INPUT_FOLDER = os.path.join(os.path.dirname(__file__), 'input')  # 修正: input フォルダへのパス
+INPUT_FOLDER = os.path.join(os.path.dirname(__file__), '.streamlit_storage', 'input')  # 修正: input フォルダへのパス
 
 # --- CSV保存処理 ---
 def save_to_csv(file_name, data):
@@ -45,7 +45,7 @@ def save_log(assignments, summary, genre_map):
         st.error(f"無効な日付形式です: {tehai_date}. 正しい形式（YYYY/MM/DD）で入力してください。")
         return  # 無効な形式の場合は処理を中断
 
-    log_path = f'output/log_{log_month}.csv'
+    log_path = f'.streamlit_storage/output/log_{log_month}.csv'
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
 
     if os.path.exists(log_path):
@@ -90,7 +90,7 @@ def save_log_from_parsed_output(parsed_rows, genre_map):           # ★ 追加
         st.error(f"無効な日付形式です: {tehai_date}")
         return
 
-    log_path = f'output/log_{log_month}.csv'
+    log_path = f'.streamlit_storage/output/log_{log_month}.csv'
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
 
     if os.path.exists(log_path):
@@ -109,7 +109,7 @@ def save_log_from_parsed_output(parsed_rows, genre_map):           # ★ 追加
     log_df.to_csv(log_path, index=False)
 
 def write_result_file(result_text: str, validated: str) -> None:
-    """output/output_result.txt に結果を書き出す"""
+    """.streamlit_storage/output/output_result.txt に結果を書き出す"""
     out_path = os.path.join(os.path.dirname(__file__),
                             "output", "output_result.txt")
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
@@ -133,6 +133,8 @@ am_input = st.text_area("午前出勤者（カンマ区切り）", key="am_input
 
 # 午後出勤者（カンマ区切り）
 pm_input = st.text_area("午後出勤者（カンマ区切り）", key="pm_input")
+
+input_file_path = os.path.join(os.path.dirname(__file__), '.streamlit_storage', 'input', 'latest_input_plan.txt')
 
 # 実行ボタン
 if st.button('実行', key="execute_button"):
@@ -174,12 +176,12 @@ if st.button('実行', key="execute_button"):
                 st.error(f"処理中にエラーが発生しました：\n{e.stderr}")
 
             # 最新の入力計画が存在しない場合にエラーメッセージ
-            if not os.path.exists("latest_input_plan.txt"):
+            if not os.path.exists(input_file_path):
                 st.error("latest_input_plan.txt の生成に失敗しました。データが不完全な可能性があります。")
                 st.stop()  # ここで処理を停止する
 
             # `prepare_assignment_input`を呼び出して、スタッフプロフィールやプロジェクトを整形
-            with open("latest_input_plan.txt", encoding="utf-8") as f:
+            with open(input_file_path, encoding="utf-8") as f:
                 raw_text = f.read()
             parsed = parse_input_data(raw_text)  # 読み込んだファイルからデータを解析
             assignment_input = prepare_assignment_input(parsed)  # スタッフや案件情報を整形
@@ -205,7 +207,7 @@ if st.button('実行', key="execute_button"):
             st.error(f"処理中にエラーが発生しました：\n{e}")
 
 # --- 結果表示 ---
-output_path = "output/output_result.txt"
+output_path = ".streamlit_storage/output/output_result.txt"
 if os.path.exists(output_path):
     with open(output_path, "r", encoding="utf-8") as f:
         content = f.read()
@@ -216,7 +218,7 @@ if os.path.exists(output_path):
     if st.button('結果を再反映', key="refresh_button"):
         parsed_rows = parse_output_result(content)
         try:
-            with open("latest_input_plan.txt", encoding="utf-8") as tf:
+            with open(input_file_path, encoding="utf-8") as tf:
                 raw_text  = tf.read()
             parsed     = parse_input_data(raw_text)
             genre_map  = parsed['genre_map']

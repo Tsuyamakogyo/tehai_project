@@ -1,9 +1,8 @@
-# プロジェクト名: 手配支援ツール
+# 手配検討アプリ（Streamlit版）
 
-## 概要
-手配支援ツールは、案件ごとの必要条件に応じてスタッフを自動割り当てする支援アプリケーションです。スタッフのスキル、ジャンル適正、過去実績（傾向スコア）、特性ワードによる優先度などを総合的に評価し、最適な配置を行います。
-
-Web ベースでブラウザから簡単にアクセスできる **Streamlit アプリ** です。ブラウザ上で手配情報を入力・編集・再反映し、統計ログにも反映できます。
+このアプリは、建設現場の人材手配を効率化する社内向けのツールです。
+ローカル環境でもWeb環境（Heroku）でも実行可能で、
+ジャンルスキル・特性・傾向・実績に基づいて最適な人員割り当てを行います。
 
 ---
 
@@ -27,61 +26,94 @@ Web ベースでブラウザから簡単にアクセスできる **Streamlit ア
 
 ---
 
-## 使用技術
+## ローカルでの実行方法
 
-- Python 3.7+
-- 主なライブラリ：
-  - `streamlit`: Webアプリ化（新規）
-  - `pandas`: データ処理
-  - `gspread`: Google Sheets連携
-  - `subprocess`: 外部スクリプト実行
-- Google Sheets API（顧客・人物データの取得に使用）
+### 1. 仮想環境の作成と有効化（Windows）
 
----
-
-## 必要なファイル
-
-- `config/tehai-reader-key.json`: Google Sheets API 認証キー  
-- `config/rules.json`: スコアロジック・note_preferenceルールなどの定義
-
----
-
-## 実行方法
-
-### Streamlit版
 ```bash
-streamlit run tools/tehai_streamlit_app.py
-
+cd tehai_project
+python -m venv venv
+venv\Scripts\activate
 ```
-1. このコマンドで、Streamlitアプリが立ち上がります。
-2. ブラウザに表示されるインターフェースを通じて、人物データのアップロード・処理を行います。
+
+### 2. 依存ライブラリのインストール
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. アプリの起動
+
+```bash
+streamlit run tehai_streamlit_app.py
+```
 
 ---
 
-## ファイル構成（最新版）
+## Herokuへのデプロイ手順
+
+1. **Herokuアカウント作成・Heroku CLIのインストール**
+2. **以下のファイルをルートディレクトリに用意：**
+   - `requirements.txt`（ライブラリ定義）
+   - `Procfile`（内容: `web: streamlit run tehai_streamlit_app.py`）
+   - `setup.sh`（実行権限付与用、オプション）
+
+3. **Gitの初期化とリモート登録**
+
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+git remote add origin https://github.com/<yourname>/tehai_project.git
+```
+
+4. **Herokuアプリの作成とデプロイ**
+
+```bash
+heroku create tehai-project
+git push heroku master
+```
+
+※ GitHub公開時は **config/tehai-reader-key.json を含めないよう注意！**
+
+---
+
+## 実行URL（Heroku）
+
+[https://tehai-project-6bd28b90a328.herokuapp.com/](https://tehai-project-6bd28b90a328.herokuapp.com/)
+
+---
+
+## ファイル構成
 
 ```
 tehai_project/
-├── tehai_streamlit_app.py  # Streamlit版アプリ
+├── tehai_streamlit_app.py      # Streamlitアプリ本体
 ├── app/
-│   ├── input_handler.py        # 入力データパース
-│   ├── data_formatter.py       # 出力整形
-│   ├── assignment_core.py      # 割り当てロジック（スコア・傾向・特性反映）
-│   ├── validation.py           # バリデーション
-│   ├── adapter.py              # 入出力データ変換・整備
-│   └── trend_analyzer.py       # 傾向スコア集計
+│   ├── assignment_core.py      # 割当ロジック
+│   ├── input_handler.py        # 入力CSVパース
+│   ├── data_formatter.py       # 出力整形処理
+│   ├── adapter.py              # 入出力データ変換
+│   ├── trend_analyzer.py       # 傾向スコア処理
+│   └── validation.py           # データチェック処理
 ├── tools/
-│   └── data_preparer.py        # ←このファイルに.env呼び出しコードがある
+│   └── data_preparer.py        # Googleスプレッドシート→入力整形
 ├── config/
-│   ├── .env                    # ← .env ファイル
-│   ├── tehai-reader-key.json   # ← API キーを保存
-│   └── rules.json              # スコアルール・特性設定
-├── input/                      # 手配検討入力（CSV等）
-├── output/                     # 出力結果・統計ログ
-├── requirements.txt            # ライブラリ定義
-├── venv/                       # 仮想環境ディレクトリ
-├── .gitignore                  # ← .gitignore ファイル
-└── README.md                   # プロジェクト概要
+│   ├── .env
+│   └── rules.json              # スコアルール設定
+├── .streamlit_storage/
+│   ├── input/                      # 入力CSVフォルダ
+│   └── output/                     # 結果CSV・ログ
+├── .streamlit/        
+│   └── secrets.toml
+├── venv                     
+├── .gitignore
+├── .python-version
+├── bfg-1.15.0.jar
+├── LICENSE
+├── Procfile
+├── requirements.txt
+└── README.md
 ```
 
 ---
