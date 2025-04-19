@@ -1,2 +1,1 @@
-web: streamlit run tehai_streamlit_app.py \
-     --server.port=$PORT --server.address=0.0.0.0 --server.headless=true
+web: streamlit run tehai_streamlit_app.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true
