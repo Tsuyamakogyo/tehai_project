@@ -136,6 +136,12 @@ pm_input = st.text_area("午後出勤者（カンマ区切り）", key="pm_input
 
 input_file_path = os.path.join(os.path.dirname(__file__), '.streamlit_storage', 'input', 'latest_input_plan.txt')
 
+# ① －－－－ セッション変数の初期化 －－－－
+if 'show_output' not in st.session_state:
+    st.session_state['show_output'] = False   # 表示するかどうか
+    st.session_state['output_content'] = ''   # 表示する内容
+# －－－－－－－－－－－－－－－－－－－－
+
 # 実行ボタン
 if st.button('実行', key="execute_button"):
     if not date_input or not project_input or not am_input or not pm_input:
@@ -202,6 +208,17 @@ if st.button('実行', key="execute_button"):
 
             # ② ★追加 : ファイル出力
             write_result_file(result_text, validated_result)
+            
+            out_path = os.path.join(os.path.dirname(__file__),
+                            ".streamlit_storage", "output", "output_result.txt")
+
+            with open(out_path, "r", encoding="utf-8") as f:
+                st.session_state['output_content'] = f.read()
+            st.session_state['show_output'] = True
+            try:
+                st.rerun()                  # 新バージョン
+            except AttributeError:
+                st.experimental_rerun()     # 旧バージョン（～1.24）
 
         except subprocess.CalledProcessError as e:
             st.error(f"処理中にエラーが発生しました：\n{e}")
@@ -212,24 +229,32 @@ if os.path.exists(output_path):
     with open(output_path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    st.text_area("出力結果", value=content, height=300)
+    if st.session_state.get('show_output'):
+        content = st.session_state['output_content']
+        st.text_area("出力結果", value=content, height=300)
 
-    # ▼▼▼ ❷ 「結果を再反映」ボタン内だけ引数を修正 ▼▼▼
-    if st.button('結果を再反映', key="refresh_button"):
-        parsed_rows = parse_output_result(content)
-        try:
-            with open(input_file_path, encoding="utf-8") as tf:
-                raw_text  = tf.read()
-            parsed     = parse_input_data(raw_text)
-            genre_map  = parsed['genre_map']
-        except Exception as e:
-            st.error(f"ジャンル取得失敗: {e}")
-        try:
-            save_log_from_parsed_output(parsed_rows, genre_map)    # ★ 呼び出し修正
-            st.success("編集後の内容を統計に反映しました")
-        except Exception as e:
-            st.error(f"統計保存失敗: {e}")
+        # ▼▼▼ ❷ 「結果を再反映」ボタン内だけ引数を修正 ▼▼▼
+        if st.button('結果を再反映', key="refresh_button"):
+            parsed_rows = parse_output_result(content)
+            try:
+                with open(input_file_path, encoding="utf-8") as tf:
+                    raw_text  = tf.read()
+                parsed     = parse_input_data(raw_text)
+                genre_map  = parsed['genre_map']
+            except Exception as e:
+                st.error(f"ジャンル取得失敗: {e}")
+            try:
+                save_log_from_parsed_output(parsed_rows, genre_map)    # ★ 呼び出し修正
+                st.success("編集後の内容を統計に反映しました")
+            except Exception as e:
+                st.error(f"統計保存失敗: {e}")
 
-# --- クリア処理 ---
+# ④ －－－－ クリアボタン －－－－
 if st.button('クリア', key="clear_button"):
-    st.experimental_rerun()  # フォームをリセット
+    st.session_state['show_output'] = False
+    st.session_state['output_content'] = ''
+    try:
+        st.rerun()                  # 新バージョン
+    except AttributeError:
+        st.experimental_rerun()     # 旧バージョン（～1.24）
+# －－－－－－－－－－－－－－－－
