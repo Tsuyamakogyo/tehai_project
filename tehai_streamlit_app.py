@@ -111,7 +111,7 @@ def save_log_from_parsed_output(parsed_rows, genre_map):           # ★ 追加
 def write_result_file(result_text: str, validated: str) -> None:
     """.streamlit_storage/output/output_result.txt に結果を書き出す"""
     out_path = os.path.join(os.path.dirname(__file__),
-                            "output", "output_result.txt")
+                            ".streamlit_storage", "output", "output_result.txt")
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
         f.write("=== 出力結果 ===\n")

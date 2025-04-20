@@ -1,31 +1,49 @@
 import csv
 import pandas as pd
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 import os
 import json
-import streamlit as st
 
-# --- Streamlit Secretsから認証情報を取得 ---
-try:
-    key_json = st.secrets["GOOGLE_API_CREDENTIALS_JSON"]
-    creds = ServiceAccountCredentials.from_json_keyfile_dict(json.loads(key_json), ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"])
-    
-    # Google Sheets APIのクライアントを作成
-    client = gspread.authorize(creds)
-    
-    # スプレッドシートの読み込み
-    spreadsheet_id = "1wmG17XpaEJlO36uofjDm9bdw2DAwEbsV2EQ4uw_yzho"
-    sh = client.open_by_key(spreadsheet_id)  # 正常に動作するはず
+import csv, os, json, gspread, warnings
+from oauth2client.service_account import ServiceAccountCredentials
+from datetime import datetime
+import pandas as pd
 
-except KeyError:
-    st.error("Google API 認証情報がStreamlit Secretsに設定されていません。")
-    st.stop()  # エラーが発生したら処理を中断
-except Exception as e:
-    st.error(f"Google API 認証に失敗しました: {e}")
-    st.stop()  # エラーが発生したら処理を中断
+# Google認証用のスコープ
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive",
+]
 
+def make_gspread_client() -> gspread.client.Client:
+    creds = None
+
+    # Render環境用：環境変数からJSONを取得
+    key_json = os.getenv("GCP_SERVICE_ACCOUNT_JSON")
+    if key_json:
+        try:
+            creds = ServiceAccountCredentials.from_json_keyfile_dict(
+                json.loads(key_json), SCOPES
+            )
+            return gspread.authorize(creds)
+        except json.JSONDecodeError:
+            warnings.warn("環境変数のGCP_SERVICE_ACCOUNT_JSONが不正なJSON形式です。ローカルファイルを試します。")
+
+    # ローカル環境用：configフォルダ内のJSONファイルを利用
+    local_key_path = os.path.join(os.path.dirname(__file__), "..", "config", "tehai-reader-key.json")
+    if os.path.exists(local_key_path):
+        creds = ServiceAccountCredentials.from_json_keyfile_name(local_key_path, SCOPES)
+        return gspread.authorize(creds)
+
+    raise RuntimeError(
+        "Google認証用の鍵が見つかりません。\n"
+        "ローカル環境：config/tehai-reader-key.jsonを置いてください。\n"
+        "Render環境：環境変数GCP_SERVICE_ACCOUNT_JSONをセットしてください。"
+    )
+
+# Clientを生成
+client = make_gspread_client()
 
 # --- スプレッドシートからデータ取得（先に記憶情報を準備） ---
 spreadsheet_id = "1wmG17XpaEJlO36uofjDm9bdw2DAwEbsV2EQ4uw_yzho"
@@ -102,8 +120,16 @@ attendance_am = len(am_workers)
 attendance_pm = len(pm_workers)
 attendance_nt = 0
 
-# --- 出力形式を整えてファイル保存 ---
-test_input_path = os.path.join(os.path.dirname(__file__), '.streamlit_storage', 'input', 'latest_input_plan.txt')
+from pathlib import Path
+
+# プロジェクトルート（tehai_project）を基準にパスを構築
+BASE_DIR = Path(__file__).resolve().parent.parent
+test_input_path = BASE_DIR / '.streamlit_storage' / 'input' / 'latest_input_plan.txt'
+
+# フォルダがなければ自動で作る（これでさらに安全）
+test_input_path.parent.mkdir(parents=True, exist_ok=True)
+
+# ファイルに書き込み
 with open(test_input_path, "w", encoding="utf-8") as f:
     f.write("【手配検討日】\n")
     f.write(f"手配検討日：{plan_date}\n\n")

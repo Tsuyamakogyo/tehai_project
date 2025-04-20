@@ -4,9 +4,15 @@ import pandas as pd
 import os
 from collections import defaultdict
 from datetime import datetime, timedelta
+from pathlib import Path                        # 追加①
 
+# === 出力ログの絶対パスを一元管理 ========================= 追加②〜④
+BASE_DIR = Path(__file__).resolve().parent.parent   # tehai_project/
+LOG_DIR  = BASE_DIR / ".streamlit_storage" / "output"
+LOG_DIR.mkdir(parents=True, exist_ok=True)          # 無ければ自動生成
+# ========================================================
 
-def load_trend_scores(log_path='output', months=3):
+def load_trend_scores(log_path: Path | str = LOG_DIR, months=3):
     """
     指定された月数以内のログから スタッフ×ジャンル 出動回数を集計
     """
@@ -37,7 +43,7 @@ def normalize_scores(trend_scores, max_score=10):
     return normalized
 
 
-def load_project_history_scores(log_path='output', months=3):
+def load_project_history_scores(log_path: Path | str = LOG_DIR, months=3):
     """
     指定された月数以内のログから スタッフ×案件（午前/午後別） の出動回数を集計
     """
