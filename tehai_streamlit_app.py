@@ -120,7 +120,7 @@ def write_result_file(result_text: str, validated: str) -> None:
         f.write(validated)
 
 # --- Streamlit UI ---
-st.title("手配支援ツール")
+st.title("手配検討支援ツール")
 
 # 手配検討日
 date_input = st.text_input("手配検討日（YYYY/MM/DD）", key="date_input")
