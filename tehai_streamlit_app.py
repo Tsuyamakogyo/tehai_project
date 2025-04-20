@@ -126,7 +126,7 @@ st.title("手配支援ツール")
 date_input = st.text_input("手配検討日（YYYY/MM/DD）", key="date_input")
 
 # 案件情報
-project_input = st.text_area("案件情報（CSV形式）", key="project_input")
+project_input = st.text_area("案件情報（CSV形式）", key="project_input", height=200)
 
 # 午前出勤者（カンマ区切り）
 am_input = st.text_area("午前出勤者（カンマ区切り）", key="am_input")
