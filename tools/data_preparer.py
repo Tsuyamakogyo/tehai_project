@@ -11,13 +11,21 @@ import streamlit as st
 try:
     key_json = st.secrets["GOOGLE_API_CREDENTIALS_JSON"]
     creds = ServiceAccountCredentials.from_json_keyfile_dict(json.loads(key_json), ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"])
+    
+    # Google Sheets APIのクライアントを作成
     client = gspread.authorize(creds)
+    
+    # スプレッドシートの読み込み
+    spreadsheet_id = "1wmG17XpaEJlO36uofjDm9bdw2DAwEbsV2EQ4uw_yzho"
+    sh = client.open_by_key(spreadsheet_id)  # 正常に動作するはず
+
 except KeyError:
     st.error("Google API 認証情報がStreamlit Secretsに設定されていません。")
     st.stop()  # エラーが発生したら処理を中断
 except Exception as e:
     st.error(f"Google API 認証に失敗しました: {e}")
     st.stop()  # エラーが発生したら処理を中断
+
 
 # --- スプレッドシートからデータ取得（先に記憶情報を準備） ---
 spreadsheet_id = "1wmG17XpaEJlO36uofjDm9bdw2DAwEbsV2EQ4uw_yzho"
