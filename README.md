@@ -1,4 +1,4 @@
-# 手配検討アプリ（Streamlit版）
+# 手配検討支援ツール（Streamlit版）
 
 このアプリは、建設現場の人材手配を効率化する社内向けのツールです。
 ローカル環境でもWeb環境（Heroku）でも実行可能で、
@@ -33,7 +33,7 @@
 ```bash
 cd tehai_project
 python -m venv venv
-venv\Scripts\activate
+.venv\Scripts\activate
 ```
 
 ### 2. 依存ライブラリのインストール
@@ -50,15 +50,7 @@ streamlit run tehai_streamlit_app.py
 
 ---
 
-## Herokuへのデプロイ手順
-
-1. **Herokuアカウント作成・Heroku CLIのインストール**
-2. **以下のファイルをルートディレクトリに用意：**
-   - `requirements.txt`（ライブラリ定義）
-   - `Procfile`（内容: `web: streamlit run tehai_streamlit_app.py`）
-   - `setup.sh`（実行権限付与用、オプション）
-
-3. **Gitの初期化とリモート登録**
+## **Gitの初期化とリモート登録**
 
 ```bash
 git init
@@ -66,21 +58,11 @@ git add .
 git commit -m "Initial commit"
 git remote add origin https://github.com/<yourname>/tehai_project.git
 ```
-
-4. **Herokuアプリの作成とデプロイ**
-
-```bash
-heroku create tehai-project
-git push heroku master
-```
-
-※ GitHub公開時は **config/tehai-reader-key.json を含めないよう注意！**
-
 ---
 
-## 実行URL（Heroku）
+## 実行URL
 
-[https://tehai-project-6bd28b90a328.herokuapp.com/](https://tehai-project-6bd28b90a328.herokuapp.com/)
+https://tehai-project.onrender.com/
 
 ---
 
@@ -102,11 +84,17 @@ tehai_project/
 │   ├── .env
 │   └── rules.json              # スコアルール設定
 ├── .streamlit_storage/
-│   ├── input/                      # 入力CSVフォルダ
-│   └── output/                     # 結果CSV・ログ
+│   ├── input/                  # 入力CSVフォルダ
+│   │   ├──plan_date.csv
+│   │   ├──project_data.csv
+│   │   ├──am_workers.csv
+│   │   ├──pm_workers.csv
+│   │   └──latest_input_plan.txt
+│   └── output/                 # 結果CSV・ログ
+│       ├──log.csv
+│       └──output_result.txt
 ├── .streamlit/        
 │   └── secrets.toml
-├── venv                     
 ├── .gitignore
 ├── .python-version
 ├── bfg-1.15.0.jar
@@ -163,21 +151,3 @@ tehai_project/
 ## ライセンス
 
 MIT License
-
----
-
-### 変更点まとめ
-1. **`Streamlit` に完全対応**:  
-   GUIアプリの説明を削除し、Streamlit 版を中心にした構成に変更。
-2. **ファイル構成の修正**:  
-   `tehai_streamlit_app.py` で動かすように記載。
-3. **誤ったコマンドを修正**:  
-   `streamlit run tools/tehai_app_streamlit.py` を、正しい `tools/tehai_streamlit_app.py` に修正。
-
----
-
-### 次のステップ
-
-- **README.md** はこれで完成です！
-- 次のステップとしては **割り当てロジック（スコア・傾向・特性反映）** を精度を高める方向に進める段階ですね。  
-  どの部分を改善したいか、さらに分析して進めていきましょう！

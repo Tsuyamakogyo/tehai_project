@@ -6,3 +6,9 @@ config/.env
 
 # API キーを無視
 config/tehai-reader-key.json
+
+# 仮想環境やキャッシュは除外
+.venv/
+__pycache__/
+*.pyc
+.env
