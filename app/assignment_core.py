@@ -11,6 +11,9 @@ def assign_priority_staff(projects, staff_profiles):
     used_staff_afternoon = set()
 
     for proj in projects:
+        proj.setdefault('assigned_morning', [])
+        proj.setdefault('assigned_afternoon', [])
+        
         for staff in staff_profiles:
             note_pref = staff.get('note_preference', {})
             if proj['customer'] in note_pref:
