@@ -13,11 +13,12 @@ def assign_priority_staff(projects, staff_profiles):
     for proj in projects:
         proj.setdefault('assigned_morning', [])
         proj.setdefault('assigned_afternoon', [])
-        
+
         for staff in staff_profiles:
             note_pref = staff.get('note_preference', {})
             if proj['customer'] in note_pref:
                 preference_level = note_pref[proj['customer']]
+                print(f"[DEBUG] {staff['name']} is {preference_level} for {proj['customer']}")
                 
                 if preference_level == '最優先':
                     # 最優先スタッフを午前または午後に配置
@@ -102,7 +103,10 @@ def run_assignment_engine(projects, staff_profiles, genre_map):
         elif shift == 'full_day':
             print(f"[DEBUG] Before assigning full_day: used_staff_morning={used_staff_morning}, used_staff_afternoon={used_staff_afternoon}")
             
+            print(f"[DEBUG] Project: {proj['project_name']} (shift={shift})")
+
             full_day_candidates = prioritize_by_genre(full_day_staff, proj['customer'], genre_map)
+            print(f"[DEBUG] Top full_day_candidates: {[c['name'] for c in full_day_candidates[:5]]}")
             
             # 午前補充
             for staff in full_day_candidates:
@@ -241,6 +245,13 @@ def prioritize_by_genre(candidates, customer_name, genre_map, project_name=None)
         # ジャンル特性に基づくブースト（例えば、スキルが◎の人など）を追加
         exclusive_boost = 100 if is_exclusive else 0
 
+        print(f"[SCORE BREAKDOWN] {staff['name']}: "
+            f"exclusive={exclusive_boost}, "
+            f"note_boost={note_boost}, "
+            f"skill_val={skill_val * 3}, "
+            f"trend_val={trend_val}, "
+            f"lead_val={lead_val}")
+
         return (
             exclusive_boost + note_boost,  # note_boostを優先
             skill_val * 3,  # skill_valに基づくスコア
@@ -248,13 +259,26 @@ def prioritize_by_genre(candidates, customer_name, genre_map, project_name=None)
             lead_val  # リーダーシップスコア
         )
 
-    return sorted(filtered_candidates, key=sort_key, reverse=True)
+    sorted_list = sorted(filtered_candidates, key=sort_key, reverse=True)
+    print(f"[DEBUG] Sorted candidate list for {customer_name} ({project_name}): {[c['name'] for c in sorted_list]}")
+    return sorted_list
 
 def sort_projects_by_fit(projects, staff_profiles, genre_map):
     def project_score(project):
         genre = genre_map.get(project['customer'], '')
         if not genre:
+            print(f"[DEBUG] No genre found for customer {project['customer']}")
             return 0
         count = sum(1 for s in staff_profiles if s['skills'].get(genre, 0) == 3)
+        print(f"[DEBUG] Project '{project['project_name']}' (genre={genre}) has {count} staff with ◎")
         return -count
-    return sorted(projects, key=project_score)
+    
+    sorted_projects = sorted(projects, key=project_score)
+    
+    print("\n[DEBUG] Sorted project list (◎少ない順):")
+    for p in sorted_projects:
+        genre = genre_map.get(p['customer'], '')
+        count = sum(1 for s in staff_profiles if s['skills'].get(genre, 0) == 3)
+        print(f"  - {p['project_name']} [{genre}]：◎={count}人")
+
+    return sorted_projects
